@@ -3,16 +3,14 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { 
   Users, 
-  // ShieldCheck, <-- XÓA (LN 6)
   UserX, 
   UserCheck, 
   Image as ImageIcon, 
   Trash2, 
   ExternalLink,
-  // ShieldAlert, <-- XÓA (LN 6)
   X,
   Loader2,
-  BarChart3, // Giữ lại vì có dùng ở dưới LN 191
+  BarChart3,
   Heart
 } from 'lucide-react';
 
@@ -30,26 +28,26 @@ function AlbumPhotosModal({ albumId, onClose }: { albumId: string, onClose: () =
   }, [albumId]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div className="p-4 border-b flex justify-between items-center bg-stone-50">
-          <h2 className="font-bold text-lg text-stone-800">Kiểm duyệt ảnh trong Album</h2>
-          <button onClick={onClose} className="p-2 bg-stone-200 rounded-full hover:bg-stone-300 transition-colors text-stone-600">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-colors duration-300">
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-transparent dark:border-zinc-800 transition-colors">
+        <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center bg-stone-50 dark:bg-black transition-colors">
+          <h2 className="font-bold text-lg text-stone-800 dark:text-gray-200">Kiểm duyệt ảnh trong Album</h2>
+          <button onClick={onClose} className="p-2 bg-stone-200 dark:bg-zinc-800 rounded-full hover:bg-stone-300 dark:hover:bg-cyan-400 transition-colors text-stone-600 dark:text-gray-400 dark:hover:text-black">
             <X className="w-5 h-5"/>
           </button>
         </div>
-        <div className="p-4 overflow-y-auto flex-1 bg-stone-100/50">
+        <div className="p-4 overflow-y-auto flex-1 bg-stone-100/50 dark:bg-black/50 transition-colors">
           {loading ? (
-             <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-stone-400"/></div>
+             <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-cyan-400"/></div>
           ) : photos.length === 0 ? (
-             <div className="text-center py-20 text-stone-500 bg-white rounded-2xl border border-dashed border-stone-200">
-                <ImageIcon className="w-10 h-10 mx-auto text-stone-300 mb-2" />
+             <div className="text-center py-20 text-stone-500 dark:text-gray-400 bg-white dark:bg-zinc-900 rounded-2xl border border-dashed border-stone-200 dark:border-zinc-800 transition-colors">
+                <ImageIcon className="w-10 h-10 mx-auto text-stone-300 dark:text-zinc-600 mb-2" />
                 <p>Album này trống.</p>
              </div>
           ) : (
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                {photos.map(p => (
-                 <div key={p.id} className="aspect-square bg-stone-200 rounded-xl overflow-hidden relative shadow-sm border border-stone-200">
+                 <div key={p.id} className="aspect-square bg-stone-200 dark:bg-zinc-800 rounded-xl overflow-hidden relative shadow-sm border border-stone-200 dark:border-zinc-700 transition-colors">
                    <img src={p.url} className="w-full h-full object-cover" alt="Album content" />
                  </div>
                ))}
@@ -75,7 +73,6 @@ export default function SuperAdmin() {
     totalFavs: 0 
   });
 
-  // Tách hàm fetchStats ra ngoài useEffect để có thể tái sử dụng dễ dàng
   async function fetchStats() {
     const { count: uCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
     const { count: aCount } = await supabase.from('albums').select('*', { count: 'exact', head: true });
@@ -131,16 +128,6 @@ export default function SuperAdmin() {
     if (!error) setData(prev => prev.map(u => u.id === userId ? { ...u, is_banned: !currentStatus } : u));
   }
 
-  // LN 12: Đã fix - Nếu không dùng handleRoleToggle thì có thể xóa hoặc comment lại
-  // Nếu dùng, hãy đảm bảo các tham số đều được sử dụng trong logic
-  /* 
-  async function handleRoleToggle(userId: string, currentRole: string) {
-    const newRole = currentRole === 'admin' ? 'user' : 'admin';
-    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-    if (!error) setData(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-  }
-  */
-
   async function handleDeleteAlbum(albumId: string) {
     if (!confirm("Xóa album này?")) return;
     const { data: photosInAlbum } = await supabase.from('photos').select('id').eq('album_id', albumId);
@@ -157,23 +144,37 @@ export default function SuperAdmin() {
     }
   }
 
-  if (!isAdmin) return <div className="p-20 text-center">Truy cập bị từ chối.</div>;
+  if (!isAdmin) return <div className="p-20 text-center dark:bg-black dark:text-white">Truy cập bị từ chối.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 pb-32">
+    <div className="max-w-7xl mx-auto px-4 py-10 pb-32 transition-colors duration-300">
       {viewingAlbumId && <AlbumPhotosModal albumId={viewingAlbumId} onClose={() => setViewingAlbumId(null)} />}
       
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-stone-900">Quản trị hệ thống</h1>
-          <p className="text-stone-500 mt-1">Dành cho người quản lý tối cao</p>
+          <h1 className="text-3xl font-bold text-stone-900 dark:text-gray-200 transition-colors">Quản trị hệ thống</h1>
+          <p className="text-stone-500 dark:text-gray-400 mt-1 transition-colors">Dành cho người quản lý tối cao</p>
         </div>
 
-        <div className="flex bg-stone-100 p-1 rounded-2xl">
-          <button onClick={() => setActiveTab('users')} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'users' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-400'}`}>
+        <div className="flex bg-stone-100 dark:bg-zinc-900 p-1 rounded-2xl transition-colors">
+          <button 
+            onClick={() => setActiveTab('users')} 
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all ${
+              activeTab === 'users' 
+                ? 'bg-white dark:bg-cyan-400 shadow-sm text-stone-900 dark:text-black' 
+                : 'text-stone-400 dark:text-gray-400 hover:text-stone-600 dark:hover:text-gray-300'
+            }`}
+          >
             <Users className="w-4 h-4"/> Người dùng
           </button>
-          <button onClick={() => setActiveTab('content')} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'content' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-400'}`}>
+          <button 
+            onClick={() => setActiveTab('content')} 
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all ${
+              activeTab === 'content' 
+                ? 'bg-white dark:bg-cyan-400 shadow-sm text-stone-900 dark:text-black' 
+                : 'text-stone-400 dark:text-gray-400 hover:text-stone-600 dark:hover:text-gray-300'
+            }`}
+          >
             <ImageIcon className="w-4 h-4"/> Nội dung
           </button>
         </div>
@@ -181,34 +182,34 @@ export default function SuperAdmin() {
 
       <div className="mb-8">
         {activeTab === 'users' ? (
-          <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm inline-flex items-center gap-4">
-            <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-600"><Users/></div>
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-stone-200 dark:border-zinc-800 shadow-sm inline-flex items-center gap-4 transition-colors">
+            <div className="w-12 h-12 bg-stone-100 dark:bg-black rounded-2xl flex items-center justify-center text-stone-600 dark:text-cyan-400 transition-colors"><Users/></div>
             <div>
-              <p className="text-xs font-bold text-stone-400 uppercase">Tổng người dùng</p>
-              <p className="text-2xl font-bold text-stone-900">{stats.totalUsers}</p>
+              <p className="text-xs font-bold text-stone-400 dark:text-zinc-500 uppercase transition-colors">Tổng người dùng</p>
+              <p className="text-2xl font-bold text-stone-900 dark:text-gray-200 transition-colors">{stats.totalUsers}</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-600"><BarChart3/></div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-stone-200 dark:border-zinc-800 shadow-sm flex items-center gap-4 transition-colors">
+                <div className="w-12 h-12 bg-stone-100 dark:bg-black rounded-2xl flex items-center justify-center text-stone-600 dark:text-cyan-400 transition-colors"><BarChart3/></div>
                 <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase">Tổng Album</p>
-                    <p className="text-2xl font-bold text-stone-900">{stats.totalAlbums}</p>
+                    <p className="text-xs font-bold text-stone-400 dark:text-zinc-500 uppercase transition-colors">Tổng Album</p>
+                    <p className="text-2xl font-bold text-stone-900 dark:text-gray-200 transition-colors">{stats.totalAlbums}</p>
                 </div>
             </div>
-            <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-600"><ImageIcon/></div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-stone-200 dark:border-zinc-800 shadow-sm flex items-center gap-4 transition-colors">
+                <div className="w-12 h-12 bg-stone-100 dark:bg-black rounded-2xl flex items-center justify-center text-stone-600 dark:text-cyan-400 transition-colors"><ImageIcon/></div>
                 <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase">Tổng ảnh</p>
-                    <p className="text-2xl font-bold text-stone-900">{stats.totalPhotos}</p>
+                    <p className="text-xs font-bold text-stone-400 dark:text-zinc-500 uppercase transition-colors">Tổng ảnh</p>
+                    <p className="text-2xl font-bold text-stone-900 dark:text-gray-200 transition-colors">{stats.totalPhotos}</p>
                 </div>
             </div>
-            <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500"><Heart/></div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-stone-200 dark:border-zinc-800 shadow-sm flex items-center gap-4 transition-colors">
+                <div className="w-12 h-12 bg-red-50 dark:bg-red-950/30 rounded-2xl flex items-center justify-center text-red-500 dark:text-red-400 transition-colors"><Heart/></div>
                 <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase">Tổng lượt yêu thích</p>
-                    <p className="text-2xl font-bold text-stone-900">{stats.totalFavs}</p>
+                    <p className="text-xs font-bold text-stone-400 dark:text-zinc-500 uppercase transition-colors">Tổng lượt yêu thích</p>
+                    <p className="text-2xl font-bold text-stone-900 dark:text-gray-200 transition-colors">{stats.totalFavs}</p>
                 </div>
             </div>
           </div>
@@ -216,29 +217,40 @@ export default function SuperAdmin() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-stone-200"/></div>
+        <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-stone-200 dark:text-cyan-400"/></div>
       ) : activeTab === 'users' ? (
-        <div className="bg-white border border-stone-200 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-stone-50 border-b border-stone-100">
-                <th className="px-6 py-4 text-xs font-bold text-stone-400 uppercase">Thông tin</th>
-                <th className="px-6 py-4 text-xs font-bold text-stone-400 uppercase">Trạng thái</th>
-                <th className="px-6 py-4 text-xs font-bold text-stone-400 uppercase text-right">Hành động</th>
+              <tr className="bg-stone-50 dark:bg-black border-b border-stone-100 dark:border-zinc-800 transition-colors">
+                <th className="px-6 py-4 text-xs font-bold text-stone-400 dark:text-gray-400 uppercase">Thông tin</th>
+                <th className="px-6 py-4 text-xs font-bold text-stone-400 dark:text-gray-400 uppercase">Trạng thái</th>
+                <th className="px-6 py-4 text-xs font-bold text-stone-400 dark:text-gray-400 uppercase text-right">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-stone-100 dark:divide-zinc-800">
               {data.map((u) => (
-                <tr key={u.id} className={u.is_banned ? 'bg-red-50/30' : ''}>
+                <tr key={u.id} className={`${u.is_banned ? 'bg-red-50/30 dark:bg-red-900/20' : ''} transition-colors`}>
                   <td className="px-6 py-4">
-                    <p className="font-semibold text-stone-900">{u.email}</p>
-                    <p className="text-[10px] text-stone-400 font-mono">{u.id}</p>
+                    <p className="font-semibold text-stone-900 dark:text-gray-200">{u.email}</p>
+                    <p className="text-[10px] text-stone-400 dark:text-zinc-500 font-mono">{u.id}</p>
                   </td>
                   <td className="px-6 py-4">
-                    {u.is_banned ? <span className="text-red-600 text-xs font-bold">Đã khóa</span> : <span className="text-emerald-600 text-xs font-bold">Hoạt động</span>}
+                    {u.is_banned ? (
+                      <span className="text-red-600 dark:text-red-400 text-xs font-bold">Đã khóa</span>
+                    ) : (
+                      <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">Hoạt động</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleBanToggle(u.id, u.is_banned)} className={`p-2 rounded-lg ${u.is_banned ? 'text-emerald-600' : 'text-red-400'}`}>
+                    <button 
+                      onClick={() => handleBanToggle(u.id, u.is_banned)} 
+                      className={`p-2 rounded-lg transition-colors ${
+                        u.is_banned 
+                          ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20' 
+                          : 'text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                      }`}
+                    >
                       {u.is_banned ? <UserCheck className="w-5 h-5"/> : <UserX className="w-5 h-5"/>}
                     </button>
                   </td>
@@ -250,16 +262,32 @@ export default function SuperAdmin() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.map(album => (
-            <div key={album.id} className="bg-white border border-stone-200 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
-              <img src={album.cover_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-xl object-cover border border-stone-100" alt="Album cover"/>
+            <div key={album.id} className="bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
+              <img src={album.cover_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-xl object-cover border border-stone-100 dark:border-zinc-800" alt="Album cover"/>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-stone-900 truncate">{album.title}</h3>
-                <p className="text-xs text-stone-500 mt-0.5 font-medium">Bởi: {album.displayEmail}</p>
-                {!album.is_published && <span className="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Riêng tư</span>}
+                <h3 className="font-bold text-stone-900 dark:text-gray-200 truncate transition-colors">{album.title}</h3>
+                <p className="text-xs text-stone-500 dark:text-gray-400 mt-0.5 font-medium transition-colors">Bởi: {album.displayEmail}</p>
+                {!album.is_published && (
+                  <span className="text-[10px] bg-stone-100 dark:bg-black text-stone-500 dark:text-gray-400 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block transition-colors">
+                    Riêng tư
+                  </span>
+                )}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setViewingAlbumId(album.id)} className="p-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors" title="Xem ảnh con"><ExternalLink className="w-5 h-5"/></button>
-                <button onClick={() => handleDeleteAlbum(album.id)} className="p-2.5 bg-stone-50 text-stone-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors" title="Xóa"><Trash2 className="w-5 h-5"/></button>
+                <button 
+                  onClick={() => setViewingAlbumId(album.id)} 
+                  className="p-2.5 bg-red-50 dark:bg-cyan-400/10 text-red-500 dark:text-cyan-400 hover:bg-red-100 dark:hover:bg-cyan-400 dark:hover:text-black rounded-xl transition-colors" 
+                  title="Xem ảnh con"
+                >
+                  <ExternalLink className="w-5 h-5"/>
+                </button>
+                <button 
+                  onClick={() => handleDeleteAlbum(album.id)} 
+                  className="p-2.5 bg-stone-50 dark:bg-zinc-800 text-stone-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors" 
+                  title="Xóa"
+                >
+                  <Trash2 className="w-5 h-5"/>
+                </button>
               </div>
             </div>
           ))}

@@ -35,12 +35,12 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
   const showPrev = () => setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 sm:p-8 animate-fadeIn">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 dark:bg-black/98 backdrop-blur-md p-4 sm:p-8 animate-fadeIn transition-colors duration-300">
       
       {/* Nút điều hướng trái */}
       <button 
         onClick={showPrev} 
-        className="absolute left-2 sm:left-6 p-2 text-white/30 hover:text-white transition-all z-30 active:scale-90"
+        className="absolute left-2 sm:left-6 p-2 text-white/30 hover:text-white dark:hover:text-cyan-400 transition-all z-30 active:scale-90"
       >
         <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12" />
       </button>
@@ -51,7 +51,7 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
         {/* NÚT X (Đóng) - Nằm trên cùng bên phải tấm ảnh */}
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/50 text-white/80 rounded-full backdrop-blur-md transition-all active:scale-90 shadow-lg"
+          className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/50 text-white/80 dark:hover:bg-cyan-400 dark:hover:text-black rounded-full backdrop-blur-md transition-all active:scale-90 shadow-lg"
         >
           <X className="w-6 h-6" />
         </button>
@@ -65,13 +65,13 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
         <img
           src={photos[currentIndex].url}
           alt={photos[currentIndex].caption}
-          className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/5"
+          className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/5 dark:border-zinc-800 transition-colors"
         />
 
         {/* CAPTION (Nếu có) */}
         {photos[currentIndex].caption && (
           <div className="absolute bottom-0 left-0 right-0 p-6 pt-12 bg-gradient-to-t from-black/80 to-transparent rounded-b-xl pointer-events-none">
-            <p className="text-white text-sm sm:text-base font-medium text-left max-w-[80%] line-clamp-2">
+            <p className="text-white dark:text-gray-200 text-sm sm:text-base font-medium text-left max-w-[80%] line-clamp-2 transition-colors">
               {photos[currentIndex].caption}
             </p>
           </div>
@@ -81,13 +81,13 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
       {/* Nút điều hướng phải */}
       <button 
         onClick={showNext} 
-        className="absolute right-2 sm:right-6 p-2 text-white/30 hover:text-white transition-all z-30 active:scale-90"
+        className="absolute right-2 sm:right-6 p-2 text-white/30 hover:text-white dark:hover:text-cyan-400 transition-all z-30 active:scale-90"
       >
         <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12" />
       </button>
 
       {/* Chỉ số ảnh (Ví dụ: 1/10) */}
-      <div className="absolute bottom-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
+      <div className="absolute bottom-6 text-white/40 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest transition-colors">
         {currentIndex + 1} / {photos.length}
       </div>
     </div>

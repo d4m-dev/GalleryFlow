@@ -81,17 +81,17 @@ export default function AlbumPage({ albumId }: { albumId: string }) {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center dark:bg-stone-950 min-h-screen">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
+      <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center dark:bg-black min-h-screen">
+        <Loader2 className="w-10 h-10 animate-spin text-amber-500 dark:text-cyan-400" />
       </div>
     );
   }
 
   if (!album) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center dark:bg-stone-950 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center dark:bg-black min-h-screen">
         <p className="text-stone-400 text-lg">Không tìm thấy album.</p>
-        <button onClick={() => navigate({ page: 'home' })} className="mt-4 text-amber-500 hover:underline">
+        <button onClick={() => navigate({ page: 'home' })} className="mt-4 text-amber-500 dark:text-cyan-400 hover:underline">
           Quay lại Thư viện
         </button>
       </div>
@@ -103,29 +103,29 @@ export default function AlbumPage({ albumId }: { albumId: string }) {
       <div className="mb-10">
         <button
           onClick={() => navigate({ page: 'home' })}
-          className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors mb-6 group"
+          className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900 dark:text-gray-400 dark:hover:text-cyan-400 transition-colors mb-6 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Quay lại Thư viện
         </button>
-        <h1 className="text-4xl sm:text-5xl font-black text-stone-900 dark:text-white tracking-tighter italic uppercase">{album.title}</h1>
+        <h1 className="text-4xl sm:text-5xl font-black text-stone-900 dark:text-gray-200 tracking-tighter italic uppercase">{album.title}</h1>
         {album.description && (
-          <p className="mt-4 text-stone-500 dark:text-stone-400 max-w-2xl text-lg leading-relaxed border-l-4 border-amber-500 pl-4">{album.description}</p>
+          <p className="mt-4 text-stone-500 dark:text-gray-300 max-w-2xl text-lg leading-relaxed border-l-4 border-amber-500 dark:border-cyan-400 pl-4">{album.description}</p>
         )}
         <div className="flex items-center gap-2 mt-4 text-xs font-bold text-stone-400 uppercase tracking-widest">
-          <Images className="w-4 h-4 text-amber-500" />
+          <Images className="w-4 h-4 text-amber-500 dark:text-cyan-400" />
           {photos.length} tác phẩm
         </div>
       </div>
 
       {photos.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed border-stone-100 dark:border-stone-800 rounded-[2.5rem]">
+        <div className="text-center py-20 border-2 border-dashed border-stone-100 dark:border-gray-900 rounded-[2.5rem]">
           <p className="text-stone-400">Chưa có ảnh nào trong album này.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {photos.map((photo, i) => (
-            <div key={photo.id} className="relative group aspect-square rounded-3xl overflow-hidden bg-stone-100 dark:bg-stone-800 shadow-sm hover:shadow-2xl transition-all duration-500">
+            <div key={photo.id} className="relative group aspect-square rounded-3xl overflow-hidden bg-stone-100 dark:bg-black dark:border dark:border-gray-900 shadow-sm hover:shadow-2xl dark:shadow-none transition-all duration-500">
               <button
                 onClick={() => setLightboxIndex(i)}
                 className="w-full h-full"
@@ -145,7 +145,7 @@ export default function AlbumPage({ albumId }: { albumId: string }) {
 
               {photo.caption && (
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <p className="text-white text-xs font-bold truncate tracking-wide">{photo.caption}</p>
+                  <p className="text-white dark:text-gray-200 text-xs font-bold truncate tracking-wide">{photo.caption}</p>
                 </div>
               )}
             </div>

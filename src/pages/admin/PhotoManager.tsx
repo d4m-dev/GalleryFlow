@@ -25,10 +25,10 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
   const [newCaption, setNewCaption] = useState('');
   const [adding, setAdding] = useState(false);
 
-  // Cấu hình màu sắc SweetAlert2 theo theme
+  // Cấu hình màu sắc SweetAlert2 theo theme AMOLED
   const getSwalConfig = () => ({
-    background: document.documentElement.classList.contains('dark') ? '#1c1917' : '#fff',
-    color: document.documentElement.classList.contains('dark') ? '#fff' : '#1c1917',
+    background: document.documentElement.classList.contains('dark') ? '#000000' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1c1917',
   });
 
   useEffect(() => {
@@ -143,36 +143,65 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
           ...getSwalConfig()
         });
       } else {
-        Swal.fire('Lỗi!', 'Không thể xóa ảnh lúc này.', 'error');
+        Swal.fire({
+          title: 'Lỗi!', 
+          text: 'Không thể xóa ảnh lúc này.', 
+          icon: 'error',
+          ...getSwalConfig()
+        });
       }
     }
   }
 
   if (loading) return (
-    <div className="flex justify-center items-center min-h-[60vh] dark:bg-stone-950">
-      <Loader2 className="animate-spin text-amber-500 w-10 h-10"/>
+    <div className="flex justify-center items-center min-h-[60vh] dark:bg-black transition-colors duration-300">
+      <Loader2 className="animate-spin text-amber-500 dark:text-cyan-400 w-10 h-10"/>
     </div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 pb-32">
+    <div className="max-w-7xl mx-auto px-4 py-8 pb-32 transition-colors duration-300">
       <button 
         onClick={() => navigate({ page: 'upload-dashboard' })} 
-        className="flex items-center gap-1.5 text-stone-500 mb-6 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors group"
+        className="flex items-center gap-1.5 text-stone-500 mb-6 hover:text-stone-900 dark:text-gray-400 dark:hover:text-cyan-400 transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Quay lại Studio
       </button>
 
       <div className="mb-10">
-        <h1 className="text-4xl font-black text-stone-900 dark:text-white tracking-tighter uppercase italic">Quản lý hình ảnh</h1>
-        <p className="text-stone-500 dark:text-stone-400 font-medium mt-1">Album: <span className="text-amber-500">{albumTitle}</span> — Hiện có {photos.length} ảnh</p>
+        <h1 className="text-4xl font-black text-stone-900 dark:text-gray-200 tracking-tighter uppercase italic transition-colors">
+          Quản lý hình ảnh
+        </h1>
+        <p className="text-stone-500 dark:text-gray-400 font-medium mt-1 transition-colors">
+          Album: <span className="text-amber-500 dark:text-cyan-400">{albumTitle}</span> — Hiện có {photos.length} ảnh
+        </p>
       </div>
 
       {/* Form thêm ảnh */}
-      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-[2.5rem] p-8 mb-12 shadow-sm">
-        <div className="flex gap-2 mb-8 bg-stone-100 dark:bg-stone-800 p-1.5 rounded-2xl w-fit">
-          <button type="button" onClick={() => setUploadMode('file')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMode === 'file' ? 'bg-white dark:bg-stone-700 shadow-sm text-stone-900 dark:text-white' : 'text-stone-400'}`}>Tải file</button>
-          <button type="button" onClick={() => setUploadMode('url')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${uploadMode === 'url' ? 'bg-white dark:bg-stone-700 shadow-sm text-stone-900 dark:text-white' : 'text-stone-400'}`}>Link URL</button>
+      <div className="bg-white dark:bg-black border border-stone-200 dark:border-zinc-800 rounded-[2.5rem] p-8 mb-12 shadow-sm transition-colors">
+        <div className="flex gap-2 mb-8 bg-stone-100 dark:bg-zinc-900 p-1.5 rounded-2xl w-fit transition-colors">
+          <button 
+            type="button" 
+            onClick={() => setUploadMode('file')} 
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              uploadMode === 'file' 
+                ? 'bg-white dark:bg-cyan-400 shadow-sm text-stone-900 dark:text-black' 
+                : 'text-stone-400 dark:text-gray-400 hover:text-stone-600 dark:hover:text-gray-300'
+            }`}
+          >
+            Tải file
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setUploadMode('url')} 
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              uploadMode === 'url' 
+                ? 'bg-white dark:bg-cyan-400 shadow-sm text-stone-900 dark:text-black' 
+                : 'text-stone-400 dark:text-gray-400 hover:text-stone-600 dark:hover:text-gray-300'
+            }`}
+          >
+            Link URL
+          </button>
         </div>
 
         <form onSubmit={addPhoto} className="space-y-5">
@@ -183,7 +212,7 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
                   id="file-upload" 
                   type="file" 
                   accept="image/*" 
-                  className="w-full p-4 border border-stone-200 dark:border-stone-800 rounded-2xl bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20" 
+                  className="w-full p-4 border border-stone-200 dark:border-zinc-800 rounded-2xl bg-stone-50 dark:bg-zinc-900 text-stone-900 dark:text-gray-200 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-cyan-400/40 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-stone-200 file:text-stone-700 hover:file:bg-stone-300 dark:file:bg-black dark:file:text-gray-200 dark:hover:file:bg-zinc-800" 
                 />
               </div>
             ) : (
@@ -192,7 +221,7 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
                 value={newUrl} 
                 onChange={e => setNewUrl(e.target.value)} 
                 placeholder="Nhập link ảnh (https://...)" 
-                className="w-full p-4 border border-stone-200 dark:border-stone-800 rounded-2xl bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20" 
+                className="w-full p-4 border border-stone-200 dark:border-zinc-800 rounded-2xl bg-stone-50 dark:bg-zinc-900 text-stone-900 dark:text-gray-200 placeholder:text-stone-400 dark:placeholder:text-zinc-500 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-cyan-400/40 transition-colors" 
               />
             )}
             <input 
@@ -200,13 +229,13 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
               value={newCaption} 
               onChange={e => setNewCaption(e.target.value)} 
               placeholder="Ghi chú ảnh..." 
-              className="w-full p-4 border border-stone-200 dark:border-stone-800 rounded-2xl bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-amber-500/20" 
+              className="w-full p-4 border border-stone-200 dark:border-zinc-800 rounded-2xl bg-stone-50 dark:bg-zinc-900 text-stone-900 dark:text-gray-200 placeholder:text-stone-400 dark:placeholder:text-zinc-500 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 dark:focus:ring-cyan-400/40 transition-colors" 
             />
           </div>
           <button 
             disabled={adding} 
             type="submit" 
-            className="w-full md:w-fit flex items-center justify-center gap-2 px-10 py-4 bg-stone-900 dark:bg-amber-500 text-white rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-stone-200 dark:shadow-none disabled:opacity-50"
+            className="w-full md:w-fit flex items-center justify-center gap-2 px-10 py-4 bg-stone-900 dark:bg-cyan-400 text-white dark:text-black rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-stone-200 dark:shadow-cyan-400/20 disabled:opacity-50"
           >
             {adding ? <Loader2 className="w-5 h-5 animate-spin"/> : <Plus className="w-5 h-5"/>} 
             {adding ? 'Đang thực hiện...' : 'Thêm vào Album'}
@@ -217,9 +246,9 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
       {/* Grid ảnh */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {photos.map(photo => (
-          <div key={photo.id} className="group relative aspect-square rounded-[2rem] overflow-hidden bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm transition-all duration-500 hover:shadow-2xl">
+          <div key={photo.id} className="group relative aspect-square rounded-[2rem] overflow-hidden bg-stone-100 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 shadow-sm transition-all duration-500 hover:shadow-2xl">
             <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+            <div className="absolute inset-0 bg-black/40 dark:bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
               <button 
                 onClick={() => deletePhoto(photo.id)} 
                 className="p-4 bg-red-500 text-white rounded-[1.2rem] hover:bg-red-600 transition-all active:scale-90 shadow-2xl"
