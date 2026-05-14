@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useRouter } from '../../lib/router';
 import { useAuth } from '../../lib/auth';
 import { ArrowLeft, Plus, Trash2, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
-import Swal from 'sweetalert2'; // Import thư viện thông báo
+import Swal from 'sweetalert2';
 
 const slugify = (text: string) => {
   return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -25,24 +25,46 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
   const [newCaption, setNewCaption] = useState('');
   const [adding, setAdding] = useState(false);
 
-  // Cấu hình màu sắc SweetAlert2 theo theme AMOLED
   const getSwalConfig = () => ({
     background: document.documentElement.classList.contains('dark') ? '#000000' : '#fff',
     color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1c1917',
   });
 
   useEffect(() => {
-    if (user) fetchData();
+    // Chỉ chạy khi user và albumId đã có dữ liệu hợp lệ
+    if (user && albumId) {
+      fetchData();
+    } else if (!user) {
+      // Xử lý khi trạng thái auth xác nhận không có user
+      setLoading(false);
+    }
   }, [user, albumId]);
 
   async function fetchData() {
-    const [albumRes, photosRes] = await Promise.all([
-      supabase.from('albums').select('title').eq('id', albumId).maybeSingle(),
-      supabase.from('photos').select('*').eq('album_id', albumId).order('created_at', { ascending: true }),
-    ]);
-    if (albumRes.data) setAlbumTitle(albumRes.data.title);
-    if (photosRes.data) setPhotos(photosRes.data);
-    setLoading(false);
+    // Tránh lỗi ném undefined vào Supabase
+    if (!albumId) {
+      setLoading(false);
+      return; 
+    }
+
+    try {
+      const [albumRes, photosRes] = await Promise.all([
+        supabase.from('albums').select('title').eq('id', albumId).maybeSingle(),
+        supabase.from('photos').select('*').eq('album_id', albumId).order('created_at', { ascending: true }),
+      ]);
+      
+      if (albumRes.error) throw albumRes.error;
+      if (photosRes.error) throw photosRes.error;
+
+      if (albumRes.data) setAlbumTitle(albumRes.data.title);
+      if (photosRes.data) setPhotos(photosRes.data);
+
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu ảnh:", error);
+    } finally {
+      // Đảm bảo loading được tắt trong mọi trường hợp
+      setLoading(false);
+    }
   }
 
   async function uploadFile(file: File) {
@@ -93,7 +115,6 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
       setNewCaption('');
       if (uploadMode === 'file') (document.getElementById('file-upload') as HTMLInputElement).value = '';
 
-      // THÔNG BÁO THÀNH CÔNG (TOAST)
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -177,7 +198,6 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
         </p>
       </div>
 
-      {/* Form thêm ảnh */}
       <div className="bg-white dark:bg-black border border-stone-200 dark:border-zinc-800 rounded-[2.5rem] p-8 mb-12 shadow-sm transition-colors">
         <div className="flex gap-2 mb-8 bg-stone-100 dark:bg-zinc-900 p-1.5 rounded-2xl w-fit transition-colors">
           <button 
@@ -243,7 +263,6 @@ export default function PhotoManager({ albumId }: { albumId: string }) {
         </form>
       </div>
 
-      {/* Grid ảnh */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {photos.map(photo => (
           <div key={photo.id} className="group relative aspect-square rounded-[2rem] overflow-hidden bg-stone-100 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 shadow-sm transition-all duration-500 hover:shadow-2xl">

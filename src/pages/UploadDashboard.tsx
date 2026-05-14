@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { useRouter } from '../lib/router';
 import { Images, Plus, Pencil, Trash2, Globe, Lock, Loader2, Search } from 'lucide-react';
-import Swal from 'sweetalert2'; // Thư viện thông báo chuyên nghiệp
+import Swal from 'sweetalert2';
 
 export default function UploadDashboard() {
   const { user } = useAuth();
@@ -13,29 +13,47 @@ export default function UploadDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (user) fetchMyAlbums();
+    // Chỉ gọi fetch khi user đã sẵn sàng
+    if (user) {
+      fetchMyAlbums();
+    } else {
+      // Nếu không có user (sau khi check session xong), tắt loading
+      setLoading(false);
+    }
   }, [user]);
 
   async function fetchMyAlbums() {
-    const { data } = await supabase
-      .from('albums')
-      .select('*, photos(count)')
-      .eq('created_by', user?.id)
-      .order('created_at', { ascending: false });
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
-    if (data) setAlbums(data);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('albums')
+        .select('*, photos(count)')
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setAlbums(data);
+
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách album:", error);
+    } finally {
+      // Đảm bảo luôn tắt loading dù API thành công hay thất bại
+      setLoading(false);
+    }
   }
 
-  // HÀM XÓA ALBUM CHUYÊN NGHIỆP
   async function handleDeleteAlbum(albumId: string, title: string) {
     const result = await Swal.fire({
       title: 'Xác nhận xóa?',
       text: `Bạn có chắc chắn muốn xóa album "${title}"? Tất cả ảnh bên trong cũng sẽ bị mất!`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444', // Red 500
-      cancelButtonColor: '#78716c', // Stone 500
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#78716c',
       confirmButtonText: 'Đồng ý xóa',
       cancelButtonText: 'Hủy',
       background: document.documentElement.classList.contains('dark') ? '#000000' : '#fff',
@@ -52,10 +70,8 @@ export default function UploadDashboard() {
 
         if (error) throw error;
 
-        // Cập nhật state để biến mất khỏi màn hình
         setAlbums(prev => prev.filter(a => a.id !== albumId));
 
-        // Thông báo thành công dạng Toast
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -88,7 +104,6 @@ export default function UploadDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 pb-32 transition-colors duration-300">
-      {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
         <div>
           <h1 className="text-4xl font-black text-stone-900 dark:text-gray-200 tracking-tight transition-colors">
@@ -120,7 +135,6 @@ export default function UploadDashboard() {
         </div>
       </div>
 
-      {/* Grid Danh sách Album */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filtered.map((album) => (
           <div key={album.id} className="bg-white dark:bg-black border border-stone-200 dark:border-zinc-800 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all group">
@@ -169,7 +183,6 @@ export default function UploadDashboard() {
                   <Pencil className="w-4 h-4"/>
                 </button>
 
-                {/* NÚT XÓA ĐÃ GẮN SỰ KIỆN */}
                 <button 
                   onClick={() => handleDeleteAlbum(album.id, album.title)}
                   className="p-3 bg-stone-50 dark:bg-zinc-900 text-stone-400 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-all active:scale-90"
