@@ -22,43 +22,60 @@ export default function HomePage() {
   }, []);
 
   async function fetchAlbums() {
-    const { data, error } = await supabase
-      .from('albums')
-      .select('id, title, description, cover_url, created_at')
-      .eq('is_published', true)
-      .order('sort_order', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('albums')
+        .select('id, title, description, cover_url, created_at')
+        .eq('is_published', true)
+        .order('sort_order', { ascending: true });
 
-    if (error || !data) {
+      // Nếu lỗi hoặc không có data, thoát an toàn
+      if (error || !data) {
+        setAlbums([]);
+        return;
+      }
+
+      // FIX LỖI KẸT LOADING: Chặn trường hợp mảng data rỗng []
+      // Nếu không chặn ở đây, Supabase hàm .in('album_id', []) sẽ quăng lỗi làm sập luồng
+      if (data.length === 0) {
+        setAlbums([]);
+        return;
+      }
+
+      const albumIds = data.map((a) => a.id);
+      
+      const { data: photoCounts, error: countsError } = await supabase
+        .from('photos')
+        .select('album_id')
+        .in('album_id', albumIds);
+
+      if (countsError) throw countsError;
+
+      const countMap: Record<string, number> = {};
+      (photoCounts || []).forEach((p) => {
+        countMap[p.album_id] = (countMap[p.album_id] || 0) + 1;
+      });
+
+      const enriched = data.map((album) => ({
+        ...album,
+        photo_count: countMap[album.id] || 0,
+      }));
+
+      setAlbums(enriched);
+    } catch (err) {
+      console.error("Lỗi tải danh sách album:", err);
+    } finally {
+      // ĐẢM BẢO LUÔN TẮT LOADING ĐỂ MỞ KHÓA MÀN HÌNH
       setLoading(false);
-      return;
     }
-
-    const albumIds = data.map((a) => a.id);
-    const { data: photoCounts } = await supabase
-      .from('photos')
-      .select('album_id')
-      .in('album_id', albumIds);
-
-    const countMap: Record<string, number> = {};
-    (photoCounts || []).forEach((p) => {
-      countMap[p.album_id] = (countMap[p.album_id] || 0) + 1;
-    });
-
-    const enriched = data.map((album) => ({
-      ...album,
-      photo_count: countMap[album.id] || 0,
-    }));
-
-    setAlbums(enriched);
-    setLoading(false);
   }
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 dark:bg-black">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 dark:bg-black transition-colors duration-300">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="aspect-[4/3] bg-stone-200 dark:bg-gray-900 rounded-2xl animate-pulse" />
+            <div key={i} className="aspect-[4/3] bg-stone-200 dark:bg-zinc-900 rounded-2xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -66,10 +83,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="dark:bg-black min-h-screen">
+    <div className="dark:bg-black min-h-screen transition-colors duration-300">
       {/* Hero Section */}
       <section className="relative bg-stone-900 dark:bg-black text-white overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 dark:from-black dark:via-gray-900 dark:to-black" />
+        {/* Đổi dark:via-gray-900 thành dark:via-black để đảm bảo đen tuyệt đối AMOLED */}
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 dark:from-black dark:via-black dark:to-black" />
         <div className="absolute inset-0 opacity-10" style={{
           backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%)',
         }} />
@@ -108,7 +126,7 @@ export default function HomePage() {
                 onClick={() => navigate({ page: 'album', id: album.id })}
                 className="group text-left"
               >
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-200 dark:bg-black dark:border dark:border-gray-900 shadow-sm dark:shadow-none">
+                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-200 dark:bg-black dark:border dark:border-zinc-800 shadow-sm dark:shadow-none">
                   {album.cover_url ? (
                     <img
                       src={album.cover_url}
@@ -116,13 +134,13 @@ export default function HomePage() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300 dark:from-gray-900 dark:to-black">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300 dark:from-zinc-900 dark:to-black">
                       <Images className="w-10 h-10 text-stone-400 dark:text-gray-700" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                    <span className="text-white/80 text-xs font-medium">Xem Album</span>
+                    <span className="text-white/80 dark:text-gray-200 text-xs font-medium">Xem Album</span>
                   </div>
                 </div>
                 <div className="mt-3.5 px-1">
