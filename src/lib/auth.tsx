@@ -18,8 +18,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Hàm kiểm tra profile để xác định quyền Admin và trạng thái bị Ban
-  const checkUserProfile = async (currentUser: User) => {
+  // Hàm kiểm tra profile được viết lại để trả về kết quả an toàn (boolean)
+  const checkUserProfile = async (currentUser: User): Promise<boolean> => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -29,49 +29,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      // Nếu người dùng bị Ban, thực hiện đăng xuất ngay lập tức
+      // Nếu người dùng bị Ban, trả về false để CHẶN việc cấp quyền truy cập
       if (profile?.is_banned) {
         alert("Tài khoản của bạn đã bị khóa bởi quản trị viên.");
-        await signOut();
-        return;
+        await supabase.auth.signOut();
+        return false; 
       }
 
-      // Cập nhật quyền Admin dựa trên bảng profiles (ưu tiên hơn app_metadata)
+      // Cập nhật quyền Admin an toàn
       setIsAdmin(profile?.role === 'admin' || currentUser.app_metadata?.role === 'admin');
+      return true; // Hợp lệ, cho phép đăng nhập
     } catch (err) {
       console.error("Lỗi khi kiểm tra profile:", err);
       // Fallback về app_metadata nếu không truy vấn được profiles
       setIsAdmin(currentUser.app_metadata?.role === 'admin');
+      return true; 
     }
   };
 
   useEffect(() => {
-    // 1. Kiểm tra session khi khởi tạo ứng dụng
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      if (currentUser) {
-        checkUserProfile(currentUser);
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
+    let mounted = true; // Biến chống rò rỉ bộ nhớ khi component unmount
 
-    // 2. Lắng nghe thay đổi trạng thái đăng nhập
+    const initAuth = async () => {
+      try {
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+
+        const currentUser = session?.user ?? null;
+        
+        // BƯỚC QUAN TRỌNG: CHỈ SET USER SAU KHI ĐÃ CHECK PROFILE XONG!
+        if (currentUser) {
+          const isSafeToLogin = await checkUserProfile(currentUser);
+          if (isSafeToLogin && mounted) {
+            setUser(currentUser);
+          } else if (mounted) {
+            setUser(null);
+            setIsAdmin(false);
+          }
+        } else if (mounted) {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.error("Lỗi khởi tạo Auth:", err);
+        if (mounted) {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } finally {
+        // Đảm bảo LUÔN TẮT LOADING để mở khóa giao diện, dù thành công hay lỗi
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Lắng nghe thay đổi trạng thái đăng nhập
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
 
       if (currentUser) {
-        await checkUserProfile(currentUser);
-      } else {
+        const isSafeToLogin = await checkUserProfile(currentUser);
+        if (isSafeToLogin && mounted) {
+          setUser(currentUser);
+        } else if (mounted) {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } else if (mounted) {
+        setUser(null);
         setIsAdmin(false);
       }
+      
+      if (mounted) setLoading(false); // Tắt loading sau khi chuyển trạng thái xong
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -84,7 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({ 
       email, 
       password,
-      // Tự động tạo profile qua trigger trong SQL hoặc bạn có thể insert thủ công ở đây
     });
     if (error) return { error: error.message };
     return { error: null };
