@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { 
-  Users,
-  UserX,
-  UserCheck,
-  Image as ImageIcon,
-  Trash2,
+  Users, 
+  // ShieldCheck, <-- XÓA (LN 6)
+  UserX, 
+  UserCheck, 
+  Image as ImageIcon, 
+  Trash2, 
   ExternalLink,
+  // ShieldAlert, <-- XÓA (LN 6)
   X,
-  Loader2, 
+  Loader2,
   BarChart3, // Giữ lại vì có dùng ở dưới LN 191
   Heart
 } from 'lucide-react';
@@ -129,6 +131,8 @@ export default function SuperAdmin() {
     if (!error) setData(prev => prev.map(u => u.id === userId ? { ...u, is_banned: !currentStatus } : u));
   }
 
+  // LN 12: Đã fix - Nếu không dùng handleRoleToggle thì có thể xóa hoặc comment lại
+  // Nếu dùng, hãy đảm bảo các tham số đều được sử dụng trong logic
   /* 
   async function handleRoleToggle(userId: string, currentRole: string) {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
