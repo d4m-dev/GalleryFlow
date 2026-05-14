@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { 
-  Users, 
-  ShieldCheck, 
-  UserX, 
-  UserCheck, 
-  Image as ImageIcon, 
-  Trash2, 
+  Users,
+  UserX,
+  UserCheck,
+  Image as ImageIcon,
+  Trash2,
   ExternalLink,
-  ShieldAlert,
   X,
-  Loader2,
-  BarChart3,
+  Loader2, 
+  BarChart3, // Giữ lại vì có dùng ở dưới LN 191
   Heart
 } from 'lucide-react';
 
@@ -50,7 +48,7 @@ function AlbumPhotosModal({ albumId, onClose }: { albumId: string, onClose: () =
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                {photos.map(p => (
                  <div key={p.id} className="aspect-square bg-stone-200 rounded-xl overflow-hidden relative shadow-sm border border-stone-200">
-                   <img src={p.url} className="w-full h-full object-cover" />
+                   <img src={p.url} className="w-full h-full object-cover" alt="Album content" />
                  </div>
                ))}
              </div>
@@ -75,19 +73,11 @@ export default function SuperAdmin() {
     totalFavs: 0 
   });
 
-  useEffect(() => {
-    if (isAdmin) {
-        fetchData();
-        fetchStats();
-    }
-  }, [activeTab, isAdmin]);
-
-  // Hàm lấy thống kê chuẩn bằng cách đếm rows
+  // Tách hàm fetchStats ra ngoài useEffect để có thể tái sử dụng dễ dàng
   async function fetchStats() {
     const { count: uCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
     const { count: aCount } = await supabase.from('albums').select('*', { count: 'exact', head: true });
     const { count: pCount } = await supabase.from('photos').select('*', { count: 'exact', head: true });
-    // Lấy tổng số dòng trong bảng favorites
     const { count: fCount } = await supabase.from('favorites').select('*', { count: 'exact', head: true });
     
     setStats({
@@ -107,14 +97,11 @@ export default function SuperAdmin() {
         .order('created_at', { ascending: false });
       setData(profiles || []);
     } else {
-      // Lấy album
       const { data: albums } = await supabase.from('albums').select('*').order('created_at', { ascending: false });
-      // Lấy profile để map email
       const { data: profiles } = await supabase.from('profiles').select('id, email');
         
       if (albums && profiles) {
         const albumsWithProfiles = albums.map(album => {
-          // QUAN TRỌNG: Tìm profile có id trùng với created_by của album
           const profile = profiles.find(p => p.id === album.created_by);
           return {
             ...album,
@@ -129,21 +116,29 @@ export default function SuperAdmin() {
     setLoading(false);
   }
 
+  useEffect(() => {
+    if (isAdmin) {
+        fetchData();
+        fetchStats();
+    }
+  }, [activeTab, isAdmin]);
+
   async function handleBanToggle(userId: string, currentStatus: boolean) {
     if (!confirm(`Xác nhận thay đổi trạng thái?`)) return;
     const { error } = await supabase.from('profiles').update({ is_banned: !currentStatus }).eq('id', userId);
     if (!error) setData(prev => prev.map(u => u.id === userId ? { ...u, is_banned: !currentStatus } : u));
   }
 
+  /* 
   async function handleRoleToggle(userId: string, currentRole: string) {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
     const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
     if (!error) setData(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
   }
+  */
 
   async function handleDeleteAlbum(albumId: string) {
     if (!confirm("Xóa album này?")) return;
-    // Xóa liên kết trước
     const { data: photosInAlbum } = await supabase.from('photos').select('id').eq('album_id', albumId);
     if(photosInAlbum && photosInAlbum.length > 0) {
         const ids = photosInAlbum.map(p => p.id);
@@ -252,17 +247,14 @@ export default function SuperAdmin() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.map(album => (
             <div key={album.id} className="bg-white border border-stone-200 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all">
-              <img src={album.cover_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-xl object-cover border border-stone-100" />
+              <img src={album.cover_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-xl object-cover border border-stone-100" alt="Album cover"/>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-stone-900 truncate">{album.title}</h3>
-                {/* HIỂN THỊ EMAIL TẠI ĐÂY */}
                 <p className="text-xs text-stone-500 mt-0.5 font-medium">Bởi: {album.displayEmail}</p>
                 {!album.is_published && <span className="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">Riêng tư</span>}
               </div>
               <div className="flex gap-2">
-                {/* NÚT ĐỎ MỞ POPUP */}
                 <button onClick={() => setViewingAlbumId(album.id)} className="p-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors" title="Xem ảnh con"><ExternalLink className="w-5 h-5"/></button>
-                {/* NÚT THÙNG RÁC */}
                 <button onClick={() => handleDeleteAlbum(album.id)} className="p-2.5 bg-stone-50 text-stone-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors" title="Xóa"><Trash2 className="w-5 h-5"/></button>
               </div>
             </div>
