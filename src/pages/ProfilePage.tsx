@@ -153,8 +153,9 @@ export default function ProfilePage() {
       setShowSettingsModal(false);
       setNewAvatar(null);
       setAvatarPreview(null);
+      setIsSavingSettings(false);
 
-      await Swal.fire({
+      Swal.fire({
         title: 'Thành công',
         text: 'Đã cập nhật thông tin cá nhân',
         icon: 'success',
@@ -166,7 +167,6 @@ export default function ProfilePage() {
     } catch (e: any) {
       console.error(e);
       Swal.fire('Lỗi', e.message || 'Không thể lưu cài đặt', 'error');
-    } finally {
       setIsSavingSettings(false);
     }
   };
