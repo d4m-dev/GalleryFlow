@@ -5,7 +5,7 @@ import { useRouter } from '../lib/router';
 import { 
   User, ShieldCheck, Image as ImageIcon, 
   Heart, Folder, LogOut, BarChart3, 
-  Settings, Zap, Crown, Mail, Calendar, Sun, Moon, Loader2
+  Settings, Zap, Crown, Mail, Calendar, Sun, Moon
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import Cropper from 'react-easy-crop';
@@ -19,9 +19,6 @@ export default function ProfilePage() {
     photos: 0,
     favorites: 0
   });
-  
-  // Dòng 22: Biến loading giờ đã được sử dụng ở dưới cùng để render!
-  const [loading, setLoading] = useState(true);
 
   // Modal Settings state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -43,7 +40,6 @@ export default function ProfilePage() {
   }, [user]);
 
   async function fetchStats() {
-    setLoading(true);
     try {
       // Lấy số liệu thống kê cá nhân
       const [albumsRes, photosRes, favsRes] = await Promise.all([
@@ -59,8 +55,6 @@ export default function ProfilePage() {
       });
     } catch (error) {
       console.error("Lỗi lấy dữ liệu Profile:", error);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -175,15 +169,6 @@ export default function ProfilePage() {
       setIsSavingSettings(false);
     }
   };
-
-  // TS6133 FIX: Xài biến loading ở đây để chặn render giao diện khi chưa tải xong số liệu
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh] dark:bg-black transition-colors duration-300">
-        <Loader2 className="animate-spin text-amber-500 dark:text-cyan-400 w-12 h-12" />
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 pb-32 transition-colors duration-300">
