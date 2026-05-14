@@ -2,17 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from '../../lib/router';
 import { useAuth } from '../../lib/auth';
-import { ArrowLeft, Plus, Trash2, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
-
-const slugify = (text: string) => {
-  return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-};
-
-const getFormattedDate = () => {
-  const now = new Date();
-  return `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
-};
 
 export default function PhotoManager({ albumId }: { albumId: string }) {
   const { user } = useAuth();

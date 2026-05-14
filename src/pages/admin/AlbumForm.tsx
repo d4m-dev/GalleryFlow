@@ -2,24 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from '../../lib/router';
 import { useAuth } from '../../lib/auth';
-import { ArrowLeft, Save, Loader2, Image as ImageIcon, AlertCircle, Upload, Link as LinkIcon } from 'lucide-react';
-
-// Hàm dọn dẹp tên file để không bị lỗi tiếng Việt và khoảng trắng
-const slugify = (text: string) => {
-  return text
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '');
-};
-
-const getFormattedDate = () => {
-  const now = new Date();
-  return `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
-};
+import { ArrowLeft, Save, Loader2, AlertCircle, Upload } from 'lucide-react';
 
 export default function AlbumForm({ albumId }: { albumId?: string }) {
   const { user } = useAuth();
@@ -43,7 +26,8 @@ export default function AlbumForm({ albumId }: { albumId?: string }) {
 
   async function fetchAlbum() {
     setLoading(true);
-    const { data, error } = await supabase.from('albums').select('*').eq('id', albumId).single();
+    // TS6133 Fix: Đã loại bỏ biến `error` không sử dụng ở đây
+    const { data } = await supabase.from('albums').select('*').eq('id', albumId).single();
     if (data) {
       setTitle(data.title);
       setDescription(data.description || '');
@@ -104,6 +88,15 @@ export default function AlbumForm({ albumId }: { albumId?: string }) {
     } finally {
       setSaving(false);
     }
+  }
+
+  // TS6133 Fix: Tận dụng biến loading để render màn hình chờ thay vì bỏ xó
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] dark:bg-black transition-colors duration-300">
+        <Loader2 className="animate-spin text-amber-500 dark:text-cyan-400 w-10 h-10"/>
+      </div>
+    );
   }
 
   return (

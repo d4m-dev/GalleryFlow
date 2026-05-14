@@ -5,7 +5,7 @@ import { useRouter } from '../lib/router';
 import { 
   User, ShieldCheck, Image as ImageIcon, 
   Heart, Folder, LogOut, BarChart3, 
-  Settings, Zap, Crown, Mail, Calendar, Sun, Moon
+  Settings, Zap, Crown, Mail, Calendar, Sun, Moon, Loader2
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import Cropper from 'react-easy-crop';
@@ -19,6 +19,8 @@ export default function ProfilePage() {
     photos: 0,
     favorites: 0
   });
+  
+  // Dòng 22: Biến loading giờ đã được sử dụng ở dưới cùng để render!
   const [loading, setLoading] = useState(true);
 
   // Modal Settings state
@@ -42,19 +44,24 @@ export default function ProfilePage() {
 
   async function fetchStats() {
     setLoading(true);
-    // Lấy số liệu thống kê cá nhân
-    const [albumsRes, photosRes, favsRes] = await Promise.all([
-      supabase.from('albums').select('id', { count: 'exact' }).eq('created_by', user?.id),
-      supabase.from('photos').select('id', { count: 'exact' }).eq('created_by', user?.id),
-      supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user?.id),
-    ]);
+    try {
+      // Lấy số liệu thống kê cá nhân
+      const [albumsRes, photosRes, favsRes] = await Promise.all([
+        supabase.from('albums').select('id', { count: 'exact' }).eq('created_by', user?.id),
+        supabase.from('photos').select('id', { count: 'exact' }).eq('created_by', user?.id),
+        supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user?.id),
+      ]);
 
-    setStats({
-      albums: albumsRes.count || 0,
-      photos: photosRes.count || 0,
-      favorites: favsRes.count || 0
-    });
-    setLoading(false);
+      setStats({
+        albums: albumsRes.count || 0,
+        photos: photosRes.count || 0,
+        favorites: favsRes.count || 0
+      });
+    } catch (error) {
+      console.error("Lỗi lấy dữ liệu Profile:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleLogout = async () => {
@@ -126,10 +133,8 @@ export default function ProfilePage() {
       if (newAvatar) {
         const fileExt = newAvatar.name.split('.').pop() || 'jpg';
         
-        // Tạo chuỗi ngày tháng theo định dạng DD-MM-YYYY
         const dateStr = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
         
-        // Tên file: email + avatar + ngày tháng + timestamp (để tránh trùng lặp cache) + đuôi file
         const safeEmail = user?.email?.replace(/[^a-zA-Z0-9@.-]/g, '_') || 'user';
         const fileName = `avatar/${safeEmail}-avatar-${dateStr}-${Date.now()}.${fileExt}`;
         
@@ -171,11 +176,19 @@ export default function ProfilePage() {
     }
   };
 
+  // TS6133 FIX: Xài biến loading ở đây để chặn render giao diện khi chưa tải xong số liệu
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] dark:bg-black transition-colors duration-300">
+        <Loader2 className="animate-spin text-amber-500 dark:text-cyan-400 w-12 h-12" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 pb-32 transition-colors duration-300">
       {/* HEADER: USER INFO */}
       <div className="relative mb-12 p-8 md:p-12 rounded-[3rem] bg-white dark:bg-black border border-stone-200 dark:border-zinc-800 overflow-hidden shadow-sm transition-colors">
-        {/* Trang trí cho Admin */}
         {isAdmin && (
           <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
             <ShieldCheck className="w-64 h-64 text-amber-500" />
@@ -270,7 +283,7 @@ export default function ProfilePage() {
               <h3 className="text-2xl font-bold mb-6 italic tracking-tight">Hành động nhanh</h3>
               <div className="grid grid-cols-2 gap-4">
                 <button onClick={() => navigate({ page: 'admin-album-new' })} className="p-6 bg-white/5 dark:bg-zinc-900/50 hover:bg-white/10 dark:hover:bg-cyan-400/10 rounded-3xl border border-white/10 dark:border-zinc-800 transition-all text-left group">
-                  <PlusIcon className="w-6 h-6 text-amber-500 dark:text-cyan-400 mb-3 group-hover:scale-125 transition-transform" />
+                  <div className="w-6 h-6 mb-3 text-amber-500 dark:text-cyan-400 group-hover:scale-125 transition-transform flex items-center justify-center font-bold text-xl">+</div>
                   <div className="font-bold text-sm">Tạo Album mới</div>
                 </button>
                 <button onClick={() => navigate({ page: 'super-admin' })} className="p-6 bg-white/5 dark:bg-zinc-900/50 hover:bg-white/10 dark:hover:bg-cyan-400/10 rounded-3xl border border-white/10 dark:border-zinc-800 transition-all text-left group">
@@ -403,14 +416,5 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
-  );
-}
-
-// Icon helper
-function PlusIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
   );
 }
