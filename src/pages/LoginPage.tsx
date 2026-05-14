@@ -15,12 +15,20 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
-    const { error } = await signIn(email, password);
-    if (error) {
-      setError(error);
+    
+    try {
+      const { error: signInError } = await signIn(email, password);
+      if (signInError) {
+        setError(signInError);
+      } else {
+        navigate({ page: 'home' });
+      }
+    } catch (err: any) {
+      console.error("Lỗi đăng nhập:", err);
+      setError(err.message || 'Có lỗi bất ngờ xảy ra khi kết nối máy chủ.');
+    } finally {
+      // BẮT BUỘC PHẢI CÓ: Dù thành công hay thất bại cũng phải trả lại trạng thái cho nút bấm
       setSubmitting(false);
-    } else {
-      navigate({ page: 'home' });
     }
   }
 
